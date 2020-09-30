@@ -23,8 +23,8 @@ void customize(std::vector<ChannelConfigurationPolicy>& policies)
 void customize(std::vector<ConfigParamSpec>& workflowOptions)
 {
   workflowOptions.push_back(ConfigParamSpec{ "input-file", VariantType::String, "/Users/tokozanimtetwa/alice/AliceO2/trddigits.root", { "Input file name for TRD Raw" } });
-  workflowOptions.push_back(ConfigParamSpec{ "tree-name", VariantType::String, "trdraw", { "Name of the tree containing the TRD raw vector" } });
-  workflowOptions.push_back(ConfigParamSpec{ "branch-name", VariantType::String, "TRDRaw", { "Name of the branch of the TRD raw vector" } });
+  workflowOptions.push_back(ConfigParamSpec{ "tree-name", VariantType::String, "o2sim", { "Name of the tree containing the TRD raw vector" } });
+  workflowOptions.push_back(ConfigParamSpec{ "branch-name", VariantType::String, "TRDDigit", { "Name of the branch of the TRD raw vector" } });
 }
 
 
