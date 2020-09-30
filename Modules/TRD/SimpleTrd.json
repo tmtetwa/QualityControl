@@ -26,8 +26,8 @@
       "QcTask": {
         "active": "true",
         "className": "o2::quality_control_modules::trd::SimpleTrdTask",
-        "moduleName": "QcTRD,
-        "detectorName": "TST",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
         "cycleDurationSeconds": "10",
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
@@ -47,11 +47,11 @@
         "className": "o2::quality_control_modules::trd::SimpleTrdCheck",
         "moduleName": "QcTRD",
         "policy": "OnAny",
-        "detectorName": "TST",
+        "detectorName": "TRD",
         "dataSource": [{
           "type": "Task",
           "name": "QcTask",
-          "MOs": ["trdTask"]
+          "MOs": ["trdTask1"]
         }]
       }
     }
@@ -61,7 +61,7 @@
       "id": "tst-raw",
       "active": "true",
       "machines": [],
-      "query": "random:TST/RAWDATA/0",
+      "query": "random:TRD/RAWDATA",
       "samplingConditions": [
         {
           "condition": "random",
@@ -71,3 +71,5 @@
       ],
       "blocking": "false"
     }
+   ]
+  }

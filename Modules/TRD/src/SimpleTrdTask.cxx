@@ -38,7 +38,7 @@ void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
     ILOG(Info) << "Custom parameter - myOwnKey: " << param->second << ENDM;
   }
 
-  mHistogram = new TH1F("trdTask", "trdTask", 20, 0, 30000);
+  mHistogram = new TH1F("trdTask", "trdTask1", 300, 0, 30000000);
   getObjectsManager()->startPublishing(mHistogram);
   getObjectsManager()->addMetadata(mHistogram->GetName(), "custom", "34");
 }
@@ -76,6 +76,7 @@ void SimpleTrdTask::monitorData(o2::framework::ProcessingContext& ctx)
       // const char* payload = input.payload;
 
       // for the sake of an example, let's fill the histogram with payload sizes
+      ILOG(Info) << "payload size: " << (header->payloadSize) << ENDM;
       mHistogram->Fill(header->payloadSize);
     }
   }
