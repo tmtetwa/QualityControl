@@ -17,8 +17,16 @@
 #define QC_MODULE_TRD_TRDSIMPLETRDTASK_H
 
 #include "QualityControl/TaskInterface.h"
+#include "DataFormatsTRD/RawData.h"
+#include "TRDRaw/Cru2TrackletTranslator.h"
+#include <cstdint>
+#include <array>
+#include <fstream>
+#include <string>
 
 class TH1F;
+class TH2F;
+
 
 using namespace o2::quality_control::core;
 
@@ -46,6 +54,14 @@ class SimpleTrdTask final : public TaskInterface
 
  private:
   TH1F* mHistogram = nullptr;
+  TH1F* mLME = nullptr;
+  TH1F* mDataSize = nullptr;
+  TH1F* mTotalDataVolume = nullptr;
+  std::array<uint32_t, 15> mCRULinkLengths;
+  ::o2::trd::HalfCRUHeader mHalfCRUHeader;
+  ::o2::trd::TrackletHCHeader mTracklet;
+  //::o2::trd::getlinkdatasize mlinks;
+
 };
 
 } // namespace o2::quality_control_modules::trd

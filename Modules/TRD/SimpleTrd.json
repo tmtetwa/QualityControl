@@ -51,7 +51,7 @@
         "dataSource": [{
           "type": "Task",
           "name": "QcTask",
-          "MOs": ["trdTask1"]
+          "MOs": ["trdPayloadSize"]
         }]
       }
     }
@@ -65,7 +65,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.1",
+          "fraction": "1",
           "seed": "1234"
         }
       ],

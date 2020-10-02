@@ -15,6 +15,7 @@
 
 #include <TCanvas.h>
 #include <TH1.h>
+#include <TH2.h>
 
 #include "QualityControl/QcInfoLogger.h"
 #include "TRD/SimpleTrdTask.h"
@@ -27,6 +28,15 @@ SimpleTrdTask::~SimpleTrdTask()
   if (mHistogram) {
     delete mHistogram;
   }
+  if (mDataSize) {
+    delete mDataSize;
+  }
+  if (mTotalDataVolume) {
+    delete mTotalDataVolume;
+  }
+  if (mLME) {
+    delete mLME;
+  }
 }
 
 void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
@@ -38,9 +48,21 @@ void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
     ILOG(Info) << "Custom parameter - myOwnKey: " << param->second << ENDM;
   }
 
-  mHistogram = new TH1F("trdTask", "trdTask1", 300, 0, 30000000);
+  mHistogram = new TH1F("trdPayloadSize", "trdPayloadSize", 300, 0, 30000000);
   getObjectsManager()->startPublishing(mHistogram);
   getObjectsManager()->addMetadata(mHistogram->GetName(), "custom", "34");
+
+  mDataSize = new TH1F("trdDataSize", "trdDataSize", 300, 0, 30000000 );
+  getObjectsManager()->startPublishing(mDataSize);
+  getObjectsManager()->addMetadata(mDataSize->GetName(), "custom", "34");
+
+  mTotalDataVolume = new TH1F("TotalDataVolume", "Total data volume", 300, 0, 30000000);
+  getObjectsManager()->startPublishing(mTotalDataVolume);
+  getObjectsManager()->addMetadata(mTotalDataVolume->GetName(), "custom", "34");
+
+  mLME = new TH1F("trdLME", "trdLME", 300, 0, 30000000 );
+  getObjectsManager()->startPublishing(mLME);
+  getObjectsManager()->addMetadata(mLME->GetName(), "custom", "34");
 }
 
 void SimpleTrdTask::startOfActivity(Activity& /*activity*/)
@@ -78,8 +100,26 @@ void SimpleTrdTask::monitorData(o2::framework::ProcessingContext& ctx)
       // for the sake of an example, let's fill the histogram with payload sizes
       ILOG(Info) << "payload size: " << (header->payloadSize) << ENDM;
       mHistogram->Fill(header->payloadSize);
+      mTotalDataVolume->Fill(1., header->payloadSize);
+
+      ::o2::trd::Cru2TrackletTranslator ibj;
+
+      auto head = ibj.mhalfcruheader;
+      auto link = ibj.mCurrentHalfCRULinkLengths;
+      auto flag = ibj.mCurrentHalfCRULinkErrorFlags;
+
+      ILOG(Info) << "\ncru header : " << head  << ENDM;
+      for (int i=0; i<16; i++){
+            ILOG(Info) << "cru data errors : " << flag[i]  << ENDM;
+            ILOG(Info) << "cru data links : " << link[i]  << ENDM;
+            mLME->Fill(flag[i]);
+            mDataSize->Fill(link[i]);
+       }
+       mLME->Draw();
+       mDataSize->Draw();
     }
-  }
+    }
+
 
   // 2. Using get("<binding>")
 
@@ -126,6 +166,9 @@ void SimpleTrdTask::reset()
 
   ILOG(Info) << "Resetting the histogram" << ENDM;
   mHistogram->Reset();
+  mDataSize->Reset();
+  mTotalDataVolume->Reset();
+  mLME->Reset();
 }
 
 } // namespace o2::quality_control_modules::trd
