@@ -16,6 +16,8 @@
 #include <TCanvas.h>
 #include <TH1.h>
 #include <TH2.h>
+#include "TRDBase/Digit.h"
+#include "DataFormatsTRD/Constants.h"
 
 #include "QualityControl/QcInfoLogger.h"
 #include "TRD/SimpleTrdTask.h"
@@ -36,6 +38,9 @@ SimpleTrdTask::~SimpleTrdTask()
   }
   if (mLME) {
     delete mLME;
+  }
+  if (mDet) {
+    delete mDet;
   }
 }
 
@@ -63,6 +68,10 @@ void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
   mLME = new TH1F("trdLME", "trdLME", 300, 0, 30000000 );
   getObjectsManager()->startPublishing(mLME);
   getObjectsManager()->addMetadata(mLME->GetName(), "custom", "34");
+
+  mDet = new TH1F("hDet", ";Detector number;Counts", 504, 0, 539);
+  getObjectsManager()->startPublishing(mDet);
+  getObjectsManager()->addMetadata(mDet->GetName(), "custom", "34");
 }
 
 void SimpleTrdTask::startOfActivity(Activity& /*activity*/)
@@ -115,8 +124,20 @@ void SimpleTrdTask::monitorData(o2::framework::ProcessingContext& ctx)
             mLME->Fill(flag[i]);
             mDataSize->Fill(link[i]);
        }
-       mLME->Draw();
-       mDataSize->Draw();
+       mLME->Draw("COLZ");
+       mDataSize->Draw("LEGO2");
+
+       // digit reader
+       int nev = digitTree->GetEntries();
+       LOG(INFO) << nev << " entries found";
+       for (int iev = 0; iev < nev; ++iev) {
+          digitTree->GetEvent(iev);
+          for (const auto& digit : *digitCont) {
+            int det = digit.getDetector();
+            mDet->Fill(det);
+          }
+        }
+
     }
     }
 
@@ -169,6 +190,7 @@ void SimpleTrdTask::reset()
   mDataSize->Reset();
   mTotalDataVolume->Reset();
   mLME->Reset();
+  mDet->Reset();
 }
 
 } // namespace o2::quality_control_modules::trd

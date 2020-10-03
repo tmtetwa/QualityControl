@@ -52,8 +52,8 @@ void RawDataQcTask::initialize(o2::framework::InitContext& /*ctx*/)
   if (auto param = mCustomParameters.find("myOwnKey"); param != mCustomParameters.end()) {
     ILOG(Info) << "Custom parameter - myOwnKey: " << param->second << ENDM;
   }
+     mHistogram = new TH1F("Adc", "ADC", 1024,-0.5, 1023.5);
 
-  
   // mHistogram = new TH2F("hmcm", "hmcm;hc;mcm",
   //                       1080, -0.5, 1079.5,
   //                       128, -0.5, 127.5););

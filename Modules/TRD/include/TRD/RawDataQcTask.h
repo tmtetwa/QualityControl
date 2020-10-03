@@ -46,6 +46,7 @@ class RawDataQcTask final : public TaskInterface
 
  private:
   TH1F* mHistogram = nullptr;
+  
 };
 
 } // namespace o2::quality_control_modules::trd

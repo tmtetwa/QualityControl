@@ -1,13 +1,10 @@
-#if __has_include(<Framework/DataSampling.h>)
-#include <Framework/DataSampling.h>
-#else
 #include <DataSampling/DataSampling.h>
-using namespace o2::utilities;
-#endif
 #include "QualityControl/InfrastructureGenerator.h"
+
 
 using namespace o2;
 using namespace o2::framework;
+using namespace o2::utilities;
 
 // The customize() functions are used to declare the executable arguments and to specify custom completion and channel
 // configuration policies. They have to be above `#include "Framework/runDataProcessing.h"` - that header checks if
@@ -61,7 +58,7 @@ WorkflowSpec defineDataProcessing(const ConfigContext& config)
 
   // Path to the config file
   std::string qcConfigurationSource = getConfigPath(config);
-  LOG(INFO) << "Using config file '" << qcConfigurationSource << "'";
+  LOG(INFO) << "Using config file '" << qcConfigurationSource << "'" << ENDM;
 
   // Generation of Data Sampling infrastructure
   DataSampling::GenerateInfrastructure(specs, qcConfigurationSource);

@@ -22,6 +22,7 @@ void customize(std::vector<ChannelConfigurationPolicy>& policies)
 
 void customize(std::vector<ConfigParamSpec>& workflowOptions)
 {
+  workflowOptions.push_back(ConfigParamSpec{ "config-path", VariantType::String, "/Users/tokozanimtetwa/alice/QualityControl/Modules/TRD/TRDQCConf.json", { "Input file name for TRD Raw" } });
   workflowOptions.push_back(ConfigParamSpec{ "input-file", VariantType::String, "/Users/tokozanimtetwa/alice/AliceO2/trddigits.root", { "Input file name for TRD Raw" } });
   workflowOptions.push_back(ConfigParamSpec{ "tree-name", VariantType::String, "o2sim", { "Name of the tree containing the TRD raw vector" } });
   workflowOptions.push_back(ConfigParamSpec{ "branch-name", VariantType::String, "TRDDigit", { "Name of the branch of the TRD raw vector" } });
@@ -69,29 +70,41 @@ WorkflowSpec defineDataProcessing(const ConfigContext& config)
         //constexpr auto persistency = Lifetime::Transient;
         constexpr auto persistency = Lifetime::Timeframe;
 
-  auto reader = std::make_shared<RootTreeReader>(treeName.data(),                      // tree name
-                                                 inputFile.data(),                     // input file name
-                                                 RootTreeReader::PublishingMode::Loop, // loop over
-                                                 Output{ "TRD", "Raw", 0, persistency },
-                                                 branchName.data() // name of the branch
-  );
+        auto reader = std::make_shared<RootTreeReader>(treeName.data(),                      // tree name
+                                                       inputFile.data(),                     // input file name
+                                                       RootTreeReader::PublishingMode::Loop, // loop over
+                                                       Output{ "TRD", "Raw", 0, persistency },
+                                                       branchName.data() // name of the branch
+                                                     );
 
-  return (AlgorithmSpec::ProcessCallback)[reader](ProcessingContext & processingContext) mutable
-  {
-    //(++(*reader))(processingContext);
-    if (reader->next()) {
-      (*reader)(processingContext);
-      //LOG(INFO) << "Call producer AlgorithmSpec::ProcessCallback:  has data " << reader->getCount();
-    } else {
-      //LOG(INFO) << "Call producer AlgorithmSpec::ProcessCallback:  no next data" << reader->getCount();
+        return (AlgorithmSpec::ProcessCallback)[reader](ProcessingContext & processingContext) mutable
+        {
+          //(++(*reader))(processingContext);
+          if (reader->next()) {
+            (*reader)(processingContext);
+            //LOG(INFO) << "Call producer AlgorithmSpec::ProcessCallback:  has data " << reader->getCount();
+          } else {
+            //LOG(INFO) << "Call producer AlgorithmSpec::ProcessCallback:  no next data" << reader->getCount();
+          }
+        };
+      }
     }
   };
-}
-}
-}
-;
 
-specs.push_back(producer);
+  specs.push_back(producer);
 
-return specs;
+  return specs;
+}
+
+std::string getConfigPath(const ConfigContext& config)
+{
+  // Determine the default config file path and name (based on option no-data-sampling and the QC_ROOT path)
+  bool noDS = config.options().get<bool>("no-data-sampling");
+  std::string filename = !noDS ? "TRDQCConf.json" : "basic-no-sampling.json";
+  std::string defaultConfigPath = getenv("QUALITYCONTROL_ROOT") != nullptr ? std::string(getenv("QUALITYCONTROL_ROOT")) + "/etc/" + filename : "$QUALITYCONTROL_ROOT undefined";
+  // The the optional one by the user
+  auto userConfigPath = config.options().get<std::string>("config-path");
+  // Finally build the config path based on the default or the user-base one
+  std::string path = std::string("json:/") + (userConfigPath.empty() ? defaultConfigPath : userConfigPath);
+  return path;
 }

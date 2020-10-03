@@ -55,6 +55,7 @@ class SimpleTrdTask final : public TaskInterface
  private:
   TH1F* mHistogram = nullptr;
   TH1F* mLME = nullptr;
+  TH1F* mDet = nullptr;
   TH1F* mDataSize = nullptr;
   TH1F* mTotalDataVolume = nullptr;
   std::array<uint32_t, 15> mCRULinkLengths;
