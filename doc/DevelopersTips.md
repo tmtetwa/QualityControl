@@ -70,8 +70,10 @@ When we don't see the monitoring data in grafana, here is what to do to pinpoint
     
 ### Monitoring setup for building the grafana dashboard
 
-Ask Adam for an account on pcald03.cern.ch:3000.
-Set the monitoring url to `"url": "influxdb-udp://flptest2.cern.ch:8089"`
+1. Ask Adam for an account on pcald03.cern.ch:3000.
+3. Ask Adam for a copy of the QC dashboard that you can edit. 
+2. Set the monitoring url to `"url": "influxdb-udp://flptest2.cern.ch:8089"`
+4. Once the dashboard is ready, tell Adam. 
 
 ### Avoid writing QC objects to a repository
 
@@ -132,8 +134,15 @@ What are the QC integration tests in the FLP Pipeline doing?
 Those object names are configurable from Ansible so that we do not have to release a new QCG rpm if we need to update the objects we check. So, if you know something will change 
 modify the following file: https://gitlab.cern.ch/AliceO2Group/system-configuration/-/blob/dev/ansible/roles/flp-deployment-checks/templates/qcg-test-config.js.j2
 
+If this test fail and one wants to investigate, they should first resume the VM in openstack. Then the normal web interfaces are available. 
+
 ### Check the logs of the QCG
 
 ```
 journalctl -u o2-qcg
 ```
+
+### Deploy a modified version of the ansible recipes
+
+When working on the ansible recipes and deploying with o2-flp-setup, the recipes to modify are in 
+`.local/share/o2-flp-setup/system-configuration/`. 
