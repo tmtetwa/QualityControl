@@ -45,6 +45,10 @@ Triggers are complemented with timestamps which correspond the time when trigger
  , even if the trigger is checked more rarely. The New Object trigger provide the timestamp of the updated object
  . These timestamps should be used to access databases, so any Post-processing Task can be rerun with any, arbitrary
   timestamps.
+  
+MonitorObjects may be saved by registering them in ObjectManager, similarly to normal QC Tasks (recommended, see
+ examples linked below), or by using DatabaseInterface directly. Please note, that created objects have to
+  registered in ObjectManager to make them accessible by Checks.
 
 Please refer to [`SkeletonPostProcessing`](https://github.com/AliceO2Group/QualityControl/blob/master/Modules/Skeleton/include/Skeleton/SkeletonPostProcessing.h) for a minimal illustration of inheriting the interface, or to [`TrendingTask`](https://github.com/AliceO2Group/QualityControl/blob/master/Framework/include/QualityControl/TrendingTask.h) for a fully functional example. One can generate their own post-processing task by using the `o2-qc-module-configurator` helper, as described in the [Module Creation](ModulesDevelopment.md#module-creation) chapter.
 
@@ -100,7 +104,18 @@ Each of the three methods can be invoked by one or more triggers. Below are list
 
 ## Running it
 
-The post-processing tasks can be run by using the `o2-qc-run-postprocessing` application (only for development) or with `o2-qc-run-postprocessing-occ` (both development and production).
+The post-processing tasks can be run in three ways. First uses the usual `o2-qc` executable which relies on DPL and
+ it is the only one which allows to run checks over objects generated in post-processing tasks. This is will be one
+ of two ways to run PP tasks in production.
+To try it out, use it like for any other QC configuration:
+```
+o2-qc -b --config json://${QUALITYCONTROL_ROOT}/etc/postprocessing.json
+```
+All declared and active tasks in the configuration file will be run in parallel.
+
+Debugging post-processing tasks might be easier when using the `o2-qc-run-postprocessing` application (only for
+ development) or with `o2-qc-run-postprocessing-occ` (both development and production), as they are one-process
+  executables, running only one, chosen task.
 
 To run the basic example, use the command below. The `--config` parameter should point to the configuration file. The `--period` parameter specifies the time interval of checking the specified triggers (in seconds).
 
@@ -114,7 +129,10 @@ This executable also allows to run a Post-processing task in batch mode, i.e. wi
  `--timestamps` argument). This way, one can rerun a task over old data, if such a task actually respects given
   timestamps.
 
-To have more control over the state transitions or to run a post-processing task in production, one should use `o2-qc-run-postprocessing-occ`. It is run almost exactly as the previously mentioned application, however one has to use [`peanut`](https://github.com/AliceO2Group/Control/tree/master/occ#single-process-control-with-peanut) to drive its state transitions and push the configuration.
+To have more control over the state transitions or to run a standalone post-processing task in production, one should
+ use `o2-qc-run-postprocessing-occ`. It is run almost exactly as the previously mentioned application, however one has
+ to use [`peanut`](https://github.com/AliceO2Group/Control/tree/master/occ#single-process-control-with-peanut) to drive
+ its state transitions and push the configuration.
 
 To try it out locally, run the following in the first terminal window (we will try out a different task this time):
 ```

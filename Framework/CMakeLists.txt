@@ -58,6 +58,7 @@ add_library(QualityControl
             src/PostProcessingFactory.cxx
             src/PostProcessingConfig.cxx
             src/PostProcessingInterface.cxx
+            src/PostProcessingDevice.cxx
             src/TrendingTask.cxx
             src/TrendingTaskConfig.cxx
             src/DummyDatabase.cxx
@@ -401,6 +402,7 @@ install(PROGRAMS script/RepoCleaner/1_per_hour.py script/RepoCleaner/Ccdb.py scr
 
 set(TEST_FILES
   "testSharedConfig.json"
+  "testEmptyConfig.json"
   "testCheckWorkflow.json"
   "testTrendingTask.json"
   "testWorkflow.json")
