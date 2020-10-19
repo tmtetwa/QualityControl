@@ -26,6 +26,7 @@
 
 class TH1F;
 class TH2F;
+class TProfile;
 
 
 using namespace o2::quality_control::core;
@@ -55,13 +56,14 @@ class SimpleTrdTask final : public TaskInterface
  private:
   TH1F* mHistogram = nullptr;
   TH1F* mLME = nullptr;
+  TH1F* mPad = nullptr;
+  TH1F* mRow = nullptr;
   TH1F* mDet = nullptr;
+  TH1F* mADC;
+  TH2F* mADCperTimeBinAllDetectors = nullptr;
   TH1F* mDataSize = nullptr;
   TH1F* mTotalDataVolume = nullptr;
-  std::array<uint32_t, 15> mCRULinkLengths;
-  ::o2::trd::HalfCRUHeader mHalfCRUHeader;
-  ::o2::trd::TrackletHCHeader mTracklet;
-  //::o2::trd::getlinkdatasize mlinks;
+  TProfile* mprofADCperTimeBinAllDetectors;
 
 };
 

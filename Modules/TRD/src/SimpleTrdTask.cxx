@@ -16,6 +16,7 @@
 #include <TCanvas.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TProfile.h>
 #include "TRDBase/Digit.h"
 #include "DataFormatsTRD/Constants.h"
 
@@ -27,21 +28,36 @@ namespace o2::quality_control_modules::trd
 
 SimpleTrdTask::~SimpleTrdTask()
 {
-  if (mHistogram) {
-    delete mHistogram;
-  }
-  if (mDataSize) {
-    delete mDataSize;
-  }
-  if (mTotalDataVolume) {
-    delete mTotalDataVolume;
-  }
-  if (mLME) {
-    delete mLME;
-  }
-  if (mDet) {
-    delete mDet;
-  }
+    if (mHistogram) {
+      delete mHistogram;
+    }
+    if (mDataSize) {
+      delete mDataSize;
+    }
+    if (mTotalDataVolume) {
+      delete mTotalDataVolume;
+    }
+    if (mLME) {
+      delete mLME;
+    }
+    if (mDet) {
+      delete mDet;
+    }
+    if (mRow) {
+      delete mRow;
+    }
+    if (mPad) {
+      delete mPad;
+    }
+    if (mADC) {
+      delete mADC;
+    }
+    if (mADCperTimeBinAllDetectors) {
+      delete mADCperTimeBinAllDetectors;
+    }
+    if (mprofADCperTimeBinAllDetectors) {
+      delete mprofADCperTimeBinAllDetectors;
+    }
 }
 
 void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
@@ -53,32 +69,63 @@ void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
     ILOG(Info) << "Custom parameter - myOwnKey: " << param->second << ENDM;
   }
 
-  mHistogram = new TH1F("trdPayloadSize", "trdPayloadSize", 300, 0, 30000000);
-  getObjectsManager()->startPublishing(mHistogram);
-  getObjectsManager()->addMetadata(mHistogram->GetName(), "custom", "34");
+      mHistogram = new TH1F("trdPayloadSize", "trdPayloadSize", 300, 0, 30000000);
+      getObjectsManager()->startPublishing(mHistogram);
+      getObjectsManager()->addMetadata(mHistogram->GetName(), "custom", "34");
 
-  mDataSize = new TH1F("trdDataSize", "trdDataSize", 300, 0, 30000000 );
-  getObjectsManager()->startPublishing(mDataSize);
-  getObjectsManager()->addMetadata(mDataSize->GetName(), "custom", "34");
+      mDataSize = new TH1F("trdDataSize", "trdDataSize", 300, 0, 30000000 );
+      getObjectsManager()->startPublishing(mDataSize);
+      getObjectsManager()->addMetadata(mDataSize->GetName(), "custom", "34");
 
-  mTotalDataVolume = new TH1F("TotalDataVolume", "Total data volume", 300, 0, 30000000);
-  getObjectsManager()->startPublishing(mTotalDataVolume);
-  getObjectsManager()->addMetadata(mTotalDataVolume->GetName(), "custom", "34");
+      mTotalDataVolume = new TH1F("TotalDataVolume", "Total data volume", 300, 0, 30000000);
+      getObjectsManager()->startPublishing(mTotalDataVolume);
+      getObjectsManager()->addMetadata(mTotalDataVolume->GetName(), "custom", "34");
 
-  mLME = new TH1F("trdLME", "trdLME", 300, 0, 30000000 );
-  getObjectsManager()->startPublishing(mLME);
-  getObjectsManager()->addMetadata(mLME->GetName(), "custom", "34");
+      mLME = new TH1F("trdLME", "trdLME", 300, 0, 30000000 );
+      getObjectsManager()->startPublishing(mLME);
+      getObjectsManager()->addMetadata(mLME->GetName(), "custom", "34");
 
-  mDet = new TH1F("hDet", ";Detector number;Counts", 504, 0, 539);
-  getObjectsManager()->startPublishing(mDet);
-  getObjectsManager()->addMetadata(mDet->GetName(), "custom", "34");
+      mDet = new TH1F("hDet", ";Detector number;Counts", 540, 0, 539);
+      getObjectsManager()->startPublishing(mDet);
+      getObjectsManager()->addMetadata(mDet->GetName(), "custom", "34");
+
+      mRow = new TH1F("hRow", ";Row number;Counts", 16, 0, 15);
+      getObjectsManager()->startPublishing(mRow);
+      getObjectsManager()->addMetadata(mRow->GetName(), "custom", "34");
+
+      mPad = new TH1F("hPad", ";Pad number;Counts", 144, 0, 143);
+      getObjectsManager()->startPublishing(mPad);
+      getObjectsManager()->addMetadata(mPad->GetName(), "custom", "34");
+
+      mADC = new TH1F("hADC", ";ADC value;Counts", 1024, 0, 1023);
+      getObjectsManager()->startPublishing(mADC);
+      getObjectsManager()->addMetadata(mADC->GetName(), "custom", "34");
+
+      mADCperTimeBinAllDetectors = new TH2F("ADCperTimeBinAllDetectors", "ADC distribution for all chambers for each time bin;Time bin;ADC", 31, -0.5, 30.5 , 1014, 0, 1023);
+      getObjectsManager()->startPublishing(mADCperTimeBinAllDetectors);
+      getObjectsManager()->addMetadata(mADCperTimeBinAllDetectors->GetName(), "custom", "34");
+
+      mprofADCperTimeBinAllDetectors = new TProfile("profADCperTimeBinAllDetectors", "ADC distribution for all chambers for each time bin;Time bin;ADC", 31, -0.5, 30.5);
+      getObjectsManager()->startPublishing(mprofADCperTimeBinAllDetectors);
+      getObjectsManager()->addMetadata(mprofADCperTimeBinAllDetectors->GetName(), "custom", "34");
+
+
 }
 
 void SimpleTrdTask::startOfActivity(Activity& /*activity*/)
 {
   ILOG(Info) << "startOfActivity" << ENDM;
   mHistogram->Reset();
-}
+  mDataSize->Reset();
+  mTotalDataVolume->Reset();
+  mLME->Reset();
+  mDet->Reset();
+  mRow->Reset();
+  mPad->Reset();
+  mADC->Reset();
+  mADCperTimeBinAllDetectors->Reset();
+  mprofADCperTimeBinAllDetectors->Reset();
+} //set stats/stacs
 
 void SimpleTrdTask::startOfCycle()
 {
@@ -127,19 +174,40 @@ void SimpleTrdTask::monitorData(o2::framework::ProcessingContext& ctx)
        mLME->Draw("COLZ");
        mDataSize->Draw("LEGO2");
 
-       // digit reader
-       int nev = digitTree->GetEntries();
-       LOG(INFO) << nev << " entries found";
-       for (int iev = 0; iev < nev; ++iev) {
-          digitTree->GetEvent(iev);
-          for (const auto& digit : *digitCont) {
-            int det = digit.getDetector();
-            mDet->Fill(det);
-          }
-        }
+       const auto inputDigits = ctx.inputs().get<gsl::span<o2::trd::Digit>>("random");
+       std::vector<o2::trd::Digit> msgDigits(inputDigits.begin(), inputDigits.end());
+       //std::vector<unsigned int> msgDigitsIndex;
+        for(auto digit : msgDigits )
+        {
+          int det = digit.getDetector();
+          int row = digit.getRow();
+          int pad = digit.getPad();
+          auto adcs = digit.getADC();
 
-    }
-    }
+          ILOG(Info) << " Detectors" << det <<ENDM;
+
+          for (int tb = 0; tb < o2::trd::constants::TIMEBINS; ++tb) {
+              int adc = adcs[tb];
+              mADC->Fill(adc);
+              mADCperTimeBinAllDetectors->Fill(tb, adc);
+            }
+
+          mDet->Fill(det);
+          mRow->Fill(row);
+          mPad->Fill(pad);
+          //mADC[det]->Fill(adcs);
+         }
+         //vbvb->draw("mrow::mpad", "mdetector")
+
+         mDet->Draw("lego");
+         mPad->Draw();
+         mRow->Draw();
+         mADC->Draw();
+         //mADC->SetLogy();
+         //mADCperTimeBinAllDetectors->Draw("HIST*");
+         //mprofADCperTimeBinAllDetectors->SetLineColor();
+       }
+     }
 
 
   // 2. Using get("<binding>")
@@ -191,6 +259,11 @@ void SimpleTrdTask::reset()
   mTotalDataVolume->Reset();
   mLME->Reset();
   mDet->Reset();
+  mRow->Reset();
+  mPad->Reset();
+  mADC->Reset();
+  mADCperTimeBinAllDetectors->Reset();
+  mprofADCperTimeBinAllDetectors->Reset();
 }
 
 } // namespace o2::quality_control_modules::trd
