@@ -19,7 +19,9 @@
 #include <TProfile.h>
 #include "TRDBase/Digit.h"
 #include "DataFormatsTRD/Constants.h"
+#include "QualityControl/ObjectsManager.h"
 
+#include "QualityControl/TaskInterface.h"
 #include "QualityControl/QcInfoLogger.h"
 #include "TRD/SimpleTrdTask.h"
 
@@ -58,6 +60,9 @@ SimpleTrdTask::~SimpleTrdTask()
     if (mprofADCperTimeBinAllDetectors) {
       delete mprofADCperTimeBinAllDetectors;
     }
+    if (mTbSum) {
+      delete mTbSum;
+    }
 }
 
 void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
@@ -71,10 +76,12 @@ void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
 
       mHistogram = new TH1F("trdPayloadSize", "trdPayloadSize", 300, 0, 30000000);
       getObjectsManager()->startPublishing(mHistogram);
+      getObjectsManager()->setDefaultDrawOptions(mHistogram->GetName(), "COLZ");
       getObjectsManager()->addMetadata(mHistogram->GetName(), "custom", "34");
 
       mDataSize = new TH1F("trdDataSize", "trdDataSize", 300, 0, 30000000 );
       getObjectsManager()->startPublishing(mDataSize);
+      getObjectsManager()->setDefaultDrawOptions(mDataSize->GetName(), "COLZ");
       getObjectsManager()->addMetadata(mDataSize->GetName(), "custom", "34");
 
       mTotalDataVolume = new TH1F("TotalDataVolume", "Total data volume", 300, 0, 30000000);
@@ -99,17 +106,22 @@ void SimpleTrdTask::initialize(o2::framework::InitContext& /*ctx*/)
 
       mADC = new TH1F("hADC", ";ADC value;Counts", 1024, 0, 1023);
       getObjectsManager()->startPublishing(mADC);
+      //getObjectsManager()->setDisplayHint(mADC->GetName(), "LOGY");
       getObjectsManager()->addMetadata(mADC->GetName(), "custom", "34");
 
       mADCperTimeBinAllDetectors = new TH2F("ADCperTimeBinAllDetectors", "ADC distribution for all chambers for each time bin;Time bin;ADC", 31, -0.5, 30.5 , 1014, 0, 1023);
       getObjectsManager()->startPublishing(mADCperTimeBinAllDetectors);
+      //getObjectsManager()->setDefaultDrawOptions(mADCperTimeBinAllDetectors->GetName(), "LEGO2");
       getObjectsManager()->addMetadata(mADCperTimeBinAllDetectors->GetName(), "custom", "34");
 
-      mprofADCperTimeBinAllDetectors = new TProfile("profADCperTimeBinAllDetectors", "ADC distribution for all chambers for each time bin;Time bin;ADC", 31, -0.5, 30.5);
+      mprofADCperTimeBinAllDetectors = new TProfile("profADCperTimeBinAllDetectors", " prof ADC distribution for all chambers for each time bin;Time bin;ADC", 31, -0.5, 30.5);
       getObjectsManager()->startPublishing(mprofADCperTimeBinAllDetectors);
+      //getObjectsManager()->setDefaultDrawOptions(mprofADCperTimeBinAllDetectors->GetName(), "");
       getObjectsManager()->addMetadata(mprofADCperTimeBinAllDetectors->GetName(), "custom", "34");
 
-
+      mTbSum= new TH1F("hTbSum", ";TbSum;Counts", 1000, 0, 3000);
+      getObjectsManager()->startPublishing(mTbSum);
+      getObjectsManager()->addMetadata(mTbSum->GetName(), "custom", "34");
 }
 
 void SimpleTrdTask::startOfActivity(Activity& /*activity*/)
@@ -125,6 +137,7 @@ void SimpleTrdTask::startOfActivity(Activity& /*activity*/)
   mADC->Reset();
   mADCperTimeBinAllDetectors->Reset();
   mprofADCperTimeBinAllDetectors->Reset();
+  mTbSum->Reset();
 } //set stats/stacs
 
 void SimpleTrdTask::startOfCycle()
@@ -177,6 +190,7 @@ void SimpleTrdTask::monitorData(o2::framework::ProcessingContext& ctx)
        const auto inputDigits = ctx.inputs().get<gsl::span<o2::trd::Digit>>("random");
        std::vector<o2::trd::Digit> msgDigits(inputDigits.begin(), inputDigits.end());
        //std::vector<unsigned int> msgDigitsIndex;
+        int tbsum[540][16][144];
         for(auto digit : msgDigits )
         {
           int det = digit.getDetector();
@@ -188,23 +202,49 @@ void SimpleTrdTask::monitorData(o2::framework::ProcessingContext& ctx)
 
           for (int tb = 0; tb < o2::trd::constants::TIMEBINS; ++tb) {
               int adc = adcs[tb];
+
               mADC->Fill(adc);
               mADCperTimeBinAllDetectors->Fill(tb, adc);
-            }
+              mprofADCperTimeBinAllDetectors->Fill(tb, adc);
 
+              tbsum[det][row][pad] += adc;
+          }
+          mTbSum->Fill(tbsum[det][row][pad]);
           mDet->Fill(det);
           mRow->Fill(row);
           mPad->Fill(pad);
           //mADC[det]->Fill(adcs);
          }
+         for (int d=0;d<540;d++) {
+           for (int r=0;r<16;r++) {
+             for (int c=1; c<143;c++) {
+
+               if (tbsum[d][r][c]>tbsum[d][r][c-1] && tbsum[d][r][c]>tbsum[d][r][c+1]) {
+                 if (tbsum[d][r][c-1] > tbsum[d][r][c+1]) {
+                   // T[c] > T[c-1] > T[c+1]
+                   htbmax->Fill(tbsum[d][r][c]);
+                   htbhi->Fill(tbsum[d][r][c-1]);
+                   htblo->Fill(tbsum[d][r][c+1]);
+
+                 } else {
+                   // T[c] > T[c+1] > T[c-1]
+                   htbmax->Fill(tbsum[d][r][c]);
+                   htbhi->Fill(tbsum[d][r][c+1]);
+                   htblo->Fill(tbsum[d][r][c-1]);
+                 }//end else
+               }// end if (tbsum[d][r][c]>tbsum[d][r][c-1] && tbsum[d][r][c]>tbsum[d][r][c+1])
+             }  // end for c
+           }//end for r
+         }// end for d
          //vbvb->draw("mrow::mpad", "mdetector")
 
-         mDet->Draw("lego");
+         mDet->Draw("COLZ");
          mPad->Draw();
          mRow->Draw();
          mADC->Draw();
+         mTbSum->Draw();
          //mADC->SetLogy();
-         //mADCperTimeBinAllDetectors->Draw("HIST*");
+         //mADCperTimeBinAllDetectors->Draw();
          //mprofADCperTimeBinAllDetectors->SetLineColor();
        }
      }
@@ -264,6 +304,7 @@ void SimpleTrdTask::reset()
   mADC->Reset();
   mADCperTimeBinAllDetectors->Reset();
   mprofADCperTimeBinAllDetectors->Reset();
+  mTbSum->Reset();
 }
 
 } // namespace o2::quality_control_modules::trd

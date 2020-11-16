@@ -63,6 +63,9 @@ class SimpleTrdTask final : public TaskInterface
   TH2F* mADCperTimeBinAllDetectors = nullptr;
   TH1F* mDataSize = nullptr;
   TH1F* mTotalDataVolume = nullptr;
+  TH1F* mTbSum = nullptr;
+  TH1F* mtbmax = nullptr;
+
   TProfile* mprofADCperTimeBinAllDetectors;
 
 };
